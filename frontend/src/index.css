@@ -1,0 +1,6 @@
+/* index.css */
+.custom-background {
+    background-color: #7c7b7b; /* Ganti dengan warna yang Anda inginkan */
+    min-height: 100vh; /* Pastikan elemen mengambil seluruh tinggi viewport */
+    padding: 20px; /* Tambahkan padding jika diperlukan */
+  }
