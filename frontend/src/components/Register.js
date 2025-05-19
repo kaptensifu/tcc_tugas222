@@ -1,5 +1,5 @@
 import React, { useState} from "react";
-import axios from "axios";
+import AxiosInstance from "../api/AxiosInstance"; // Ganti axios dengan AxiosInstance
 import { useNavigate,} from "react-router-dom";
 import 'bulma/css/bulma.min.css';
 
@@ -13,7 +13,7 @@ const Register = () => {
 const saveUser = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`http://localhost:5000/register`, {
+      await AxiosInstance.post("/register", {
         name,
         email,
         gender,
