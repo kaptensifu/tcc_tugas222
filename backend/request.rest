@@ -1,4 +1,5 @@
 GET http://localhost:5000/notes
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6InRlcyIsImVtYWlsIjoidGVzQHRlcy5jb20iLCJnZW5kZXIiOiJNYWxlIiwiY3JlYXRlZEF0IjoiMjAyNS0wNS0xN1QwNjoxNjowOC4wMDBaIiwidXBkYXRlZEF0IjoiMjAyNS0wNS0xOFQwNDo0NToyNS4wMDBaIiwiaWF0IjoxNzQ3NTQ0MjQ5LCJleHAiOjE3NDc1NDQyNzl9.4PA_wtjxJL6Y3F2YZ14XtOLBy7b_qvrOe7d1hFT-ii4
 
 ###
 GET http://localhost:5000/notes/1
@@ -25,3 +26,52 @@ Content-Type: application/json
 
 ###
 DELETE http://localhost:5000/notes/2
+
+###
+GET http://localhost:5000/users
+Authorization: Bearer eeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6InRlcyIsImVtYWlsIjoidGVzQHRlcy5jb20iLCJnZW5kZXIiOiJNYWxlIiwiY3JlYXRlZEF0IjoiMjAyNS0wNS0xN1QwNjoxNjowOC4wMDBaIiwidXBkYXRlZEF0IjoiMjAyNS0wNS0xOFQwNDo0NToyNS4wMDBaIiwiaWF0IjoxNzQ3NTQ0MjQ5LCJleHAiOjE3NDc1NDQyNzl9.4PA_wtjxJL6Y3F2YZ14XtOLBy7b_qvrOe7d1hFT-ii4
+
+###
+
+POST http://localhost:5000/register
+Content-Type: application/json
+
+{
+    "name": "tes",
+    "email": "tes@tes.com",
+    "gender": "Male",
+    "password": "12345"
+}
+
+### 
+
+PUT http://localhost:5000/edit-user/14
+Content-Type: application/json
+
+{
+    "name": "tessss",
+    "email": "tesss@tessss.com",
+    "gender": "Male"
+}
+
+###
+
+DELETE http://localhost:5000/delete-user/17
+
+
+###
+
+POST http://localhost:5000/login
+Content-Type: application/json
+
+{
+   
+    "name": "tes",
+    "password": "12345"
+}
+
+
+
+###
+
+DELETE http://localhost:5000/logout

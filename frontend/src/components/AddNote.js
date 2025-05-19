@@ -1,23 +1,32 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import AxiosInstance from "../api/AxiosInstance"; // Ganti axios dengan AxiosInstance
 import { useNavigate } from "react-router-dom";
-import { BASE_URL } from "../utils";
+import { useAuth } from "../auth/AuthProvider.js";
+import "bulma/css/bulma.css";
 
 const AddNote = () => {
   const [judul, setJudul] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
   const [pembuat, setPembuat] = useState("");
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    // Redirect ke halaman login jika tidak terautentikasi
+    if (!isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
   const saveNote = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${BASE_URL}/add-note`, {
+      await AxiosInstance.post("/add-note", { // Hapus BASE_URL dan gunakan AxiosInstance
         judul,
         deskripsi,
         pembuat,
       });
-      navigate("/");
+      navigate("/notes");
     } catch (error) {
       console.log(error);
     }
@@ -29,6 +38,9 @@ const AddNote = () => {
       <div className="column is-half">
         <div className="box"> 
           <h1 className="has-text-centered is-size-2">Tambah Note</h1>
+          <div className="has-text-centered mb-4">
+            <p className="is-size-5">Pengguna: {user?.name || "Guest"}</p>
+          </div>
           <form onSubmit={saveNote}>
             <div className="field">
               <label className="label">Judul</label>
