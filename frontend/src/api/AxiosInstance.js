@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const AxiosInstance = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://t7-notes-89-948060519163.us-central1.run.app",
   withCredentials: true,
 });
 
