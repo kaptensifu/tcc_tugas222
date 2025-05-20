@@ -10,7 +10,10 @@ const app = express();
 dotenv.config();
 app.use(cookieParser());
 app.use(cors({ 
-  origin: 'http://localhost:3000', // ganti sesuai frontend kamu
+  origin: [
+    'https://t7-notes-89-dot-c-01-450604.uc.r.appspot.com',
+    'http://localhost:3000',
+  ], // ganti sesuai frontend kamu
   credentials: true 
 }));
 app.use(express.json());
