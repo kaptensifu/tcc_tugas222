@@ -1,9 +1,8 @@
-// 2. Next, let's improve the AxiosInterceptor.js
 // src/api/AxiosInterceptor.js
 import AxiosInstance from "./AxiosInstance.js";
 import { jwtDecode } from "jwt-decode";
 
-// Menambahkan flag untuk mencegah infinite loop
+// Add flag to prevent infinite loop
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -19,13 +18,37 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Bungkus dalam fungsi untuk bisa diimpor dan digunakan AuthProvider
+// Function to check if an interceptor already exists
+const hasInterceptor = (interceptors, interceptorId) => {
+  return interceptors.handlers.some(handler => handler.id === interceptorId);
+};
+
+// Custom interceptor IDs for tracking
+const REQUEST_INTERCEPTOR_ID = 'auth-request-interceptor';
+const RESPONSE_INTERCEPTOR_ID = 'auth-response-interceptor';
+
+// Wrap in function to be imported and used by AuthProvider
 export const setupInterceptors = (accessToken, setAccessToken) => {
+  console.log("Setting up interceptors with token:", accessToken ? "Present" : "None");
+  
+  // Clear any existing interceptors to prevent duplicates
+  AxiosInstance.interceptors.request.handlers.forEach((handler, index) => {
+    if (handler && handler.id === REQUEST_INTERCEPTOR_ID) {
+      AxiosInstance.interceptors.request.eject(handler);
+    }
+  });
+  
+  AxiosInstance.interceptors.response.handlers.forEach((handler, index) => {
+    if (handler && handler.id === RESPONSE_INTERCEPTOR_ID) {
+      AxiosInstance.interceptors.response.eject(handler);
+    }
+  });
+  
   // Request interceptor
   AxiosInstance.interceptors.request.use(
     async (config) => {
-      // Jangan mencoba refresh token untuk request refresh token atau login
-      if (config.url === "/token" || config.url === "/login") {
+      // Don't try to refresh token for refresh token or login requests
+      if (config.url === "/token" || config.url === "/login" || config.url === "/register") {
         return config;
       }
       
@@ -52,7 +75,9 @@ export const setupInterceptors = (accessToken, setAccessToken) => {
               processQueue(null, newToken);
               isRefreshing = false;
             } catch (error) {
-              console.log("Refresh token failed", error);
+              if (!error.handledSilently) {
+                console.log("Refresh token failed", error);
+              }
               processQueue(error, null);
               isRefreshing = false;
               
@@ -61,7 +86,7 @@ export const setupInterceptors = (accessToken, setAccessToken) => {
               return Promise.reject(error);
             }
           } else {
-            // Token masih valid atau refresh sedang berlangsung
+            // Token still valid or refresh in progress
             if (isRefreshing) {
               // Add request to queue if we're already refreshing
               return new Promise((resolve, reject) => {
@@ -75,7 +100,7 @@ export const setupInterceptors = (accessToken, setAccessToken) => {
                   return Promise.reject(err);
                 });
             } else {
-              // Token masih valid
+              // Token still valid
               config.headers.Authorization = `Bearer ${accessToken}`;
             }
           }
@@ -87,23 +112,32 @@ export const setupInterceptors = (accessToken, setAccessToken) => {
     },
     (error) => {
       return Promise.reject(error);
-    }
+    },
+    { id: REQUEST_INTERCEPTOR_ID } // Add ID for tracking
   );
 
-  // Response interceptor untuk handling error 401/403
+  // Response interceptor for handling 401/403 errors
   AxiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
-      // Cek apakah error adalah 401 atau 403, dan request bukan untuk refresh token
+      // Skip handling for expected 401s on public routes
+      if (error.config && 
+          (error.config.url === "/token") && 
+          error.response?.status === 401) {
+        error.handledSilently = true;
+        return Promise.reject(error);
+      }
+      
+      // Check if error is 401 or 403, and request is not for refresh token
       const originalRequest = error.config;
       if ((error.response?.status === 401 || error.response?.status === 403) &&
           !originalRequest._retry &&
           originalRequest.url !== "/token") {
         
-        // Tandai request ini sudah pernah retry
+        // Mark this request as retried
         originalRequest._retry = true;
         
-        // Hanya mencoba refresh token jika belum dalam proses refresh
+        // Only try to refresh token if not already refreshing
         if (!isRefreshing) {
           isRefreshing = true;
           
@@ -121,12 +155,15 @@ export const setupInterceptors = (accessToken, setAccessToken) => {
             
             return AxiosInstance(originalRequest);
           } catch (refreshError) {
-            console.log("Refresh token failed", refreshError);
+            // If refresh token request itself fails with 401, it means we need to login again
             processQueue(refreshError, null);
             isRefreshing = false;
             
-            // Redirect to login page
-            window.location.href = "/";
+            // For auth errors, redirect to login page
+            if (refreshError.response?.status === 401 || refreshError.response?.status === 403) {
+              console.log("Session expired, redirecting to login");
+              window.location.href = "/";
+            }
             return Promise.reject(refreshError);
           }
         } else {
@@ -146,6 +183,7 @@ export const setupInterceptors = (accessToken, setAccessToken) => {
       }
       
       return Promise.reject(error);
-    }
+    },
+    { id: RESPONSE_INTERCEPTOR_ID } // Add ID for tracking
   );
 };

@@ -1,12 +1,11 @@
-// 4. Fix AuthProvider.js to better handle token logic
 // src/auth/AuthProvider.js
 import React, { createContext, useState, useContext, useEffect } from "react";
 import AxiosInstance from "../api/AxiosInstance.js";
 
-// Buat context
+// Create context
 const AuthContext = createContext(null);
 
-// Hook untuk menggunakan context
+// Hook to use context
 export const useAuth = () => useContext(AuthContext);
 
 // Provider component
@@ -16,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [refreshAttempted, setRefreshAttempted] = useState(false);
 
-  // Cek status autentikasi saat aplikasi dimuat
+  // Check authentication status when app loads
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -36,7 +35,13 @@ export const AuthProvider = ({ children }) => {
           }
         }
       } catch (error) {
-        console.log("Tidak terautentikasi", error);
+        // Don't log error details for expected 401 - just handle it silently
+        if (error.response && error.response.status === 401) {
+          console.log("Not authenticated - user needs to log in");
+        } else if (!error.handledSilently) {
+          // Only log unexpected errors
+          console.log("Authentication check error:", error);
+        }
       } finally {
         setLoading(false);
         setRefreshAttempted(true);
@@ -46,15 +51,19 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Fungsi login
+  // Login function
   const login = async (credentials) => {
     const response = await AxiosInstance.post("/login", credentials);
     setUser(response.data.safeUserData);
     setAccessToken(response.data.accessToken);
+    
+    // Add a small delay to allow token to be set before any subsequent requests
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     return response.data;
   };
 
-  // Fungsi logout
+  // Logout function
   const logout = async () => {
     try {
       await AxiosInstance.delete("/logout");
@@ -66,7 +75,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Value yang akan disediakan ke consumer
+  // Value to be provided to consumers
   const value = {
     user,
     accessToken,

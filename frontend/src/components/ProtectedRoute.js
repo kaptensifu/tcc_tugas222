@@ -6,7 +6,7 @@ import { useAuth } from "../auth/AuthProvider.js";
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading, refreshAttempted } = useAuth();
 
-  // Tampilkan loading jika masih cek autentikasi dan belum mencoba refresh
+  // Show loading if still checking authentication and haven't tried refresh
   if (loading && !refreshAttempted) {
     return (
       <div className="hero is-fullheight is-flex is-justify-content-center is-align-items-center">
@@ -18,12 +18,13 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // Redirect ke login jika tidak terautentikasi dan sudah mencoba refresh
+  // Redirect to login if not authenticated and already tried refresh
   if (!isAuthenticated && refreshAttempted) {
+    console.log("Not authenticated, redirecting to login page");
     return <Navigate to="/" replace />;
   }
 
-  // Render children jika terautentikasi
+  // Render children if authenticated
   return children;
 };
 
